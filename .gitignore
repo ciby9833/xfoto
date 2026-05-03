@@ -1,0 +1,12 @@
+node_modules/
+out/
+dist/
+.DS_Store
+data/captures/*
+data/output/*
+!data/captures/.gitkeep
+!data/output/.gitkeep
+
+# digiCamControl binaries — too large for git, copy manually before building
+vendor/digicam/*
+!vendor/digicam/README.md
