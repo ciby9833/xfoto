@@ -4,6 +4,7 @@ dist/
 .DS_Store
 data/captures/*
 data/output/*
+data/*.db
 !data/captures/.gitkeep
 !data/output/.gitkeep
 
