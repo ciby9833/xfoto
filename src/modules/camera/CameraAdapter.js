@@ -3,20 +3,31 @@ import fs from 'fs'
 import path from 'path'
 import { getDataDir, VENDOR_DIR } from '../../shared/paths.js'
 
-// Bundled digiCamControl portable — no separate installation needed
-const DCC_CMD = path.join(VENDOR_DIR, 'digicam', 'CameraControlCmd.exe')
+// Priority order when looking for CameraControlCmd.exe:
+// 1. Bundled portable files in vendor/digicam/  (production — preferred)
+// 2. Standard system installation paths          (dev/test convenience)
+const DCC_SEARCH_PATHS = [
+  path.join(VENDOR_DIR, 'digicam', 'CameraControlCmd.exe'),
+  'C:\\Program Files\\digiCamControl\\CameraControlCmd.exe',
+  'C:\\Program Files (x86)\\digiCamControl\\CameraControlCmd.exe'
+]
 
-// IMPORTANT: The digiCamControl GUI (CameraControl.exe) must NOT be running
-// when this app uses CameraControlCmd.exe — they conflict on the same camera.
+// IMPORTANT: digiCamControl GUI must NOT be running when this app captures.
+// The GUI and CameraControlCmd.exe conflict on the same USB camera connection.
 
-function ensureDcc() {
-  if (!fs.existsSync(DCC_CMD)) {
-    throw new Error(
-      `CameraControlCmd.exe not found at:\n  ${DCC_CMD}\n\n` +
-      `Please extract digiCamControl portable zip into:\n  ${path.dirname(DCC_CMD)}\n\n` +
-      `Download: https://github.com/dukus/digiCamControl/releases/latest`
-    )
+function findDcc() {
+  for (const p of DCC_SEARCH_PATHS) {
+    if (fs.existsSync(p)) return p
   }
+  throw new Error(
+    'CameraControlCmd.exe not found.\n\n' +
+    'Option A — Bundle portable files (for production builds):\n' +
+    `  Extract digiCamControl portable zip into:\n  ${path.join(VENDOR_DIR, 'digicam')}\n\n` +
+    'Option B — Install normally (for quick testing):\n' +
+    '  Run digiCamControlsetup_x.x.x.exe and install to default path.\n\n' +
+    'Download: https://github.com/dukus/digiCamControl/releases/latest\n' +
+    'Searched paths:\n' + DCC_SEARCH_PATHS.map(p => `  ${p}`).join('\n')
+  )
 }
 
 const MOCK_SAMPLES = ['sample1.jpg', 'sample2.jpg', 'sample3.jpg']
@@ -25,23 +36,26 @@ let mockIndex = 0
 class CameraAdapter {
   capture() {
     return new Promise((resolve, reject) => {
-      try { ensureDcc() } catch (e) { return reject(e) }
+      let dccPath
+      try { dccPath = findDcc() } catch (e) { return reject(e) }
 
       const captureDir = path.join(getDataDir(), 'captures')
       fs.mkdirSync(captureDir, { recursive: true })
 
       const outPath = path.join(captureDir, `photo_${Date.now()}.jpg`)
-      // Correct argument order per docs: /filename <path> /capture
-      const cmd = `"${DCC_CMD}" /filename "${outPath}" /capture`
+      const cmd = `"${dccPath}" /filename "${outPath}" /capture`
+
+      console.log('[Camera] using:', dccPath)
+      console.log('[Camera] cmd:', cmd)
 
       exec(cmd, (err, stdout, stderr) => {
         if (err) return reject(new Error(`Capture failed: ${err.message}\n${stderr}`))
         if (!fs.existsSync(outPath)) {
           return reject(new Error(
-            `Capture command exited OK but file not found: ${outPath}\n` +
-            `stdout: ${stdout}`
+            `Command exited OK but file not found: ${outPath}\nstdout: ${stdout}`
           ))
         }
+        console.log('[Camera] captured:', outPath)
         resolve(outPath)
       })
     })
