@@ -8,6 +8,4 @@ data/*.db
 !data/captures/.gitkeep
 !data/output/.gitkeep
 
-# digiCamControl binaries — too large for git, copy manually before building
-vendor/digicam/*
-!vendor/digicam/README.md
+# digiCamControl binaries are committed directly (~59MB runtime only, no single file >100MB)
