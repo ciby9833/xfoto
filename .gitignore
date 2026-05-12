@@ -1,11 +1,22 @@
-node_modules/
-out/
-dist/
-.DS_Store
-data/captures/*
-data/output/*
-data/*.db
-!data/captures/.gitkeep
-!data/output/.gitkeep
+# ── Electron app (xfoto/) ────────────────────────────────────────────────────
+xfoto/node_modules/
+xfoto/out/
+xfoto/dist/
+xfoto/.DS_Store
+xfoto/data/captures/*
+xfoto/data/output/*
+xfoto/data/*.db
+!xfoto/data/captures/.gitkeep
+!xfoto/data/output/.gitkeep
 
-# digiCamControl binaries are committed directly (~59MB runtime only, no single file >100MB)
+# digiCamControl binaries are committed directly (~59MB runtime, no file >100MB)
+
+# ── Backend (backend/) ───────────────────────────────────────────────────────
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ── Common ───────────────────────────────────────────────────────────────────
+.DS_Store
